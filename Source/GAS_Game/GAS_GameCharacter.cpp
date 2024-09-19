@@ -157,6 +157,8 @@ void AGAS_GameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGAS_GameCharacter::Look);
+
+		EnhancedInputComponent->BindAction(PrimaryAbilityAction, ETriggerEvent::Triggered, this, &AGAS_GameCharacter::OnPrimaryAbility);
 	}
 	else
 	{
@@ -218,5 +220,25 @@ void AGAS_GameCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void AGAS_GameCharacter::OnPrimaryAbility(const FInputActionValue& Value)
+{
+	SendAbilityLocalInput(Value, static_cast<int32>(EAbilityInputID::PrimaryAbility));
+}
+
+void AGAS_GameCharacter::SendAbilityLocalInput(const FInputActionValue& Value, int32 inputID)
+{
+	if (!AbilitySystemComponent)
+		return;
+
+	if (Value.Get<bool>())
+	{
+		AbilitySystemComponent->AbilityLocalInputPressed(inputID);
+	}
+	else
+	{
+		AbilitySystemComponent->AbilityLocalInputReleased(inputID);
 	}
 }

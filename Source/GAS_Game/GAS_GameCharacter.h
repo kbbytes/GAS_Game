@@ -51,6 +51,9 @@ class AGAS_GameCharacter : public ACharacter, public IAbilitySystemInterface
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* PrimaryAbilityAction;
+
 public:
 	AGAS_GameCharacter();
 	
@@ -75,7 +78,10 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
-			
+
+	void OnPrimaryAbility(const FInputActionValue& Value);
+	
+	virtual void SendAbilityLocalInput(const FInputActionValue& Value, int32 inputID);
 
 protected:
 	// APawn interface
