@@ -2,11 +2,11 @@
 
 
 #include "GGAttributeSet.h"
-#include "AbilitySystemComponent.h"
 #include <Net/UnrealNetwork.h>
+#include "GameplayEffectExtension.h"
 
 UGGAttributeSet::UGGAttributeSet()
-	:Health(40.f), MaxHealth(60.f)
+	: Health(40.f), MaxHealth(60.f), Armor(50.f), MaxArmor(50.f)
 {
 
 }
@@ -16,6 +16,58 @@ void UGGAttributeSet::ClampAttributeOnChange(const FGameplayAttribute& Attribute
 	if (Attribute == GetHealthAttribute())
 	{
 		NewValue = FMath::Clamp(NewValue, 0.0f, GetMaxHealth());
+	}
+
+	if (Attribute == GetArmorAttribute())
+	{
+		NewValue = FMath::Clamp(NewValue, 0.0f, GetMaxArmor());
+	}
+}
+
+void UGGAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
+{
+	Super::PostGameplayEffectExecute(Data);
+
+	if (Data.EvaluatedData.Attribute == GetInDamageAttribute())
+	{
+		float InDamageDone = GetInDamage();
+		SetInDamage(0.f);
+		if (InDamageDone > 0.f)
+		{
+			const float NewArmor = GetArmor() - InDamageDone;
+			SetArmor(FMath::ClampAngle(NewArmor, 0.f, GetMaxArmor()));
+			if ((GetArmor() <= 0.f) && !bOutOfArmor)
+			{
+				if (OnOutOfArmor.IsBound())
+				{
+					const FGameplayEffectContextHandle& EffectContext = Data.EffectSpec.GetEffectContext();
+					AActor* Instigator = EffectContext.GetOriginalInstigator();
+					AActor* Causer = EffectContext.GetEffectCauser();
+
+					OnOutOfArmor.Broadcast(Instigator, Causer, Data.EffectSpec, Data.EvaluatedData.Magnitude);
+				}
+			}
+			bOutOfArmor = (GetArmor() <= 0.f);
+
+			float NewHealth = GetHealth();
+			if (NewArmor < 0.0f)
+			{
+				NewHealth += NewArmor;
+			}
+
+			SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
+			if ((GetHealth() <= 0.f) && !bOutOfHealth)
+			{
+				if (OnOutOfHealth.IsBound())
+				{
+					const FGameplayEffectContextHandle& EffectContext = Data.EffectSpec.GetEffectContext();
+					AActor* Instigator = EffectContext.GetOriginalInstigator();
+					AActor* Causer = EffectContext.GetEffectCauser();
+
+					OnOutOfHealth.Broadcast(Instigator, Causer, Data.EffectSpec, Data.EvaluatedData.Magnitude);
+				}
+			}
+		}
 	}
 }
 
@@ -39,6 +91,9 @@ void UGGAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
 	DOREPLIFETIME_CONDITION_NOTIFY(UGGAttributeSet, Health, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UGGAttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(UGGAttributeSet, Armor, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UGGAttributeSet, MaxArmor, COND_None, REPNOTIFY_Always);
 }
 
 void UGGAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
@@ -46,7 +101,17 @@ void UGGAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UGGAttributeSet, Health, OldHealth);
 }
 
-void UGGAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldHealth)
+void UGGAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UGGAttributeSet, MaxHealth, OldHealth);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGGAttributeSet, MaxHealth, OldMaxHealth);
+}
+
+void UGGAttributeSet::OnRep_Armor(const FGameplayAttributeData& OldArmor)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGGAttributeSet, MaxArmor, OldArmor);
+}
+
+void UGGAttributeSet::OnRep_MaxArmor(const FGameplayAttributeData& OldMaxArmor)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGGAttributeSet, MaxArmor, OldMaxArmor);
 }

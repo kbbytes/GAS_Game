@@ -130,6 +130,21 @@ void AGAS_GameCharacter::OnHealthAttributeChanged(const FOnAttributeChangeData& 
 	OnHealthChanged(Data.OldValue, Data.NewValue);
 }
 
+void AGAS_GameCharacter::OnArmorAttributeChanged(const FOnAttributeChangeData& Data)
+{
+	OnArmorChanged(Data.OldValue, Data.NewValue);
+}
+
+void AGAS_GameCharacter::OnOutOfHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec& DamageEffectSpec, float DamageMagnitude)
+{
+	OnOutOfHealth(DamageInstigator, DamageCauser, DamageEffectSpec, DamageMagnitude);
+}
+
+void AGAS_GameCharacter::OnOutOfArmorChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec& DamageEffectSpec, float DamageMagnitude)
+{
+	OnOutOfArmor(DamageInstigator, DamageCauser, DamageEffectSpec, DamageMagnitude);
+}
+
 void AGAS_GameCharacter::BeginPlay()
 {
 	// Call the base class  
@@ -140,6 +155,10 @@ void AGAS_GameCharacter::BeginPlay()
 		return;
 
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddUObject(this, &AGAS_GameCharacter::OnHealthAttributeChanged);
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetArmorAttribute()).AddUObject(this, &AGAS_GameCharacter::OnArmorAttributeChanged);
+
+	AttributeSet->OnOutOfHealth.AddUObject(this, &AGAS_GameCharacter::OnOutOfHealthChanged);
+	AttributeSet->OnOutOfArmor.AddUObject(this, &AGAS_GameCharacter::OnOutOfArmorChanged);
 }
 
 //////////////////////////////////////////////////////////////////////////

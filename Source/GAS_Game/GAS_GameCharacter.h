@@ -77,6 +77,21 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "GAS")
 	void OnHealthChanged(float OldValue, float NewValue);
 
+	virtual void OnArmorAttributeChanged(const FOnAttributeChangeData& Data);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "GAS")
+	void OnArmorChanged(float OldValue, float NewValue);
+
+	virtual void OnOutOfHealthChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec& DamageEffectSpec, float DamageMagnitude);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "GAS")
+	void OnOutOfHealth(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec& DamageEffectSpec, float DamageMagnitude);
+
+	virtual void OnOutOfArmorChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec& DamageEffectSpec, float DamageMagnitude);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "GAS")
+	void OnOutOfArmor(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec& DamageEffectSpec, float DamageMagnitude);
+
 protected:
 
 	/** Called for movement input */
