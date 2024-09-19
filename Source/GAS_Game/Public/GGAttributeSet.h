@@ -21,18 +21,19 @@ class GAS_GAME_API UGGAttributeSet : public UAttributeSet
 {
 	GENERATED_BODY()
 
-	UGGAttributeSet();
+public:
 
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	
-	ATTRIBUTE_ACCESSORS(UGGAttributeSet, Health);
-	ATTRIBUTE_ACCESSORS(UGGAttributeSet, MaxHealth);
+	UGGAttributeSet();
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Health, Category = "Attributes", meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData Health;
+	ATTRIBUTE_ACCESSORS(UGGAttributeSet, Health);
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxHealth, Category = "Attributes", meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData MaxHealth;
+	ATTRIBUTE_ACCESSORS(UGGAttributeSet, MaxHealth);
+
+protected:
 
 	UFUNCTION()
 	void OnRep_Health(const FGameplayAttributeData& OldHealth);
