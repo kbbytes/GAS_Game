@@ -125,10 +125,21 @@ void AGAS_GameCharacter::InitializeEffects()
 	}
 }
 
+void AGAS_GameCharacter::OnHealthAttributeChanged(const FOnAttributeChangeData& Data)
+{
+	OnHealthChanged(Data.OldValue, Data.NewValue);
+}
+
 void AGAS_GameCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+
+
+	if (!AbilitySystemComponent)
+		return;
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddUObject(this, &AGAS_GameCharacter::OnHealthAttributeChanged);
 }
 
 //////////////////////////////////////////////////////////////////////////
