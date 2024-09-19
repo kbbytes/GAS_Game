@@ -10,6 +10,9 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "AbilitySystemComponent.h"
+#include "GAS_Game.h"
+#include "GGGameplayAbility.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -50,8 +53,73 @@ AGAS_GameCharacter::AGAS_GameCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
+
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+}
+
+UAbilitySystemComponent* AGAS_GameCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
+void AGAS_GameCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (!AbilitySystemComponent)
+		return;
+
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+
+	InitializeAbilities();
+	InitializeEffects();
+}
+
+void AGAS_GameCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	if (!AbilitySystemComponent)
+		return;
+
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+
+	BindInput();
+
+	InitializeEffects();
+}
+
+void AGAS_GameCharacter::InitializeAbilities()
+{
+	if (!HasAuthority() || !AbilitySystemComponent)
+		return;
+
+	for (TSubclassOf<UGGGameplayAbility>& Ability : DefaultAbilities)
+	{
+		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(Ability, 1, static_cast<int32>(Ability.GetDefaultObject()->AbilityInputID), this));
+	}
+}
+
+void AGAS_GameCharacter::InitializeEffects()
+{
+	if (!AbilitySystemComponent)
+		return;
+
+	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+	EffectContext.AddSourceObject(this);
+
+	for (TSubclassOf<UGameplayEffect>& Effect : DefaultEffects)
+	{
+		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(Effect, 1, EffectContext);
+		if (SpecHandle.IsValid())
+		{
+			FActiveGameplayEffectHandle GEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
+	}
 }
 
 void AGAS_GameCharacter::BeginPlay()
@@ -91,6 +159,27 @@ void AGAS_GameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
+
+	BindInput();
+}
+
+void AGAS_GameCharacter::BindInput()
+{
+	if (bIsInputBound || !AbilitySystemComponent || !IsValid(InputComponent))
+		return;
+
+	FTopLevelAssetPath EnumAssetPath = FTopLevelAssetPath(FName("/Script/GAS_Game"), FName("EAbilityInputID"));
+	AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, 
+		FGameplayAbilityInputBinds(
+			FString("Confirm"), 
+			FString("Cancel"), 
+			EnumAssetPath, 
+			static_cast<int32>(EAbilityInputID::Confirm), 
+			static_cast<int32>(EAbilityInputID::Cancel)
+		)
+	);
+
+	bIsInputBound = true;
 }
 
 void AGAS_GameCharacter::Move(const FInputActionValue& Value)
