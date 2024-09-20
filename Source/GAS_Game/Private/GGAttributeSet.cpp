@@ -34,37 +34,51 @@ void UGGAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 		SetInDamage(0.f);
 		if (InDamageDone > 0.f)
 		{
-			const float NewArmor = GetArmor() - InDamageDone;
-			SetArmor(FMath::ClampAngle(NewArmor, 0.f, GetMaxArmor()));
-			if ((GetArmor() <= 0.f) && !bOutOfArmor)
+			if (GetArmor() > 0.f)
 			{
-				if (OnOutOfArmor.IsBound())
+				float InDamageDoneToArmor = InDamageDone;
+				const FGameplayTag AcidDamageTag = FGameplayTag::RequestGameplayTag(FName("Damage.Type.Acid"), false);
+				bool IsAcidDamage = Data.EffectSpec.CapturedSourceTags.GetSpecTags().HasTagExact(AcidDamageTag);
+				if (IsAcidDamage)
+					InDamageDoneToArmor *= 1.5f;
+				float NewArmor = GetArmor();
+				const float ArmorDiff = FMath::Min(NewArmor, InDamageDoneToArmor);
+				InDamageDone -= ArmorDiff;
+				NewArmor -= ArmorDiff;
+				SetArmor(FMath::Clamp(NewArmor, 0.f, GetMaxArmor()));
+				if ((GetArmor() <= 0.f) && !bOutOfArmor)
 				{
-					const FGameplayEffectContextHandle& EffectContext = Data.EffectSpec.GetEffectContext();
-					AActor* Instigator = EffectContext.GetOriginalInstigator();
-					AActor* Causer = EffectContext.GetEffectCauser();
+					if (OnOutOfArmor.IsBound())
+					{
+						const FGameplayEffectContextHandle& EffectContext = Data.EffectSpec.GetEffectContext();
+						AActor* Instigator = EffectContext.GetOriginalInstigator();
+						AActor* Causer = EffectContext.GetEffectCauser();
 
-					OnOutOfArmor.Broadcast(Instigator, Causer, Data.EffectSpec, Data.EvaluatedData.Magnitude);
+						OnOutOfArmor.Broadcast(Instigator, Causer, Data.EffectSpec, Data.EvaluatedData.Magnitude);
+					}
 				}
+				bOutOfArmor = (GetArmor() <= 0.f);
 			}
-			bOutOfArmor = (GetArmor() <= 0.f);
-
-			float NewHealth = GetHealth();
-			if (NewArmor < 0.0f)
+			if (InDamageDone > 0.f)
 			{
-				NewHealth += NewArmor;
-			}
+				float InDamageDoneToHealth = InDamageDone;
+				const FGameplayTag FireDamageTag = FGameplayTag::RequestGameplayTag(FName("Damage.Type.Fire"), false);
+				bool IsFireDamage = Data.EffectSpec.CapturedSourceTags.GetSpecTags().HasTagExact(FireDamageTag);
+				if (IsFireDamage)
+					InDamageDoneToHealth *= 1.5f;
+				const float NewHealth = GetHealth() - InDamageDoneToHealth;
 
-			SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
-			if ((GetHealth() <= 0.f) && !bOutOfHealth)
-			{
-				if (OnOutOfHealth.IsBound())
+				SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
+				if ((GetHealth() <= 0.f) && !bOutOfHealth)
 				{
-					const FGameplayEffectContextHandle& EffectContext = Data.EffectSpec.GetEffectContext();
-					AActor* Instigator = EffectContext.GetOriginalInstigator();
-					AActor* Causer = EffectContext.GetEffectCauser();
+					if (OnOutOfHealth.IsBound())
+					{
+						const FGameplayEffectContextHandle& EffectContext = Data.EffectSpec.GetEffectContext();
+						AActor* Instigator = EffectContext.GetOriginalInstigator();
+						AActor* Causer = EffectContext.GetEffectCauser();
 
-					OnOutOfHealth.Broadcast(Instigator, Causer, Data.EffectSpec, Data.EvaluatedData.Magnitude);
+						OnOutOfHealth.Broadcast(Instigator, Causer, Data.EffectSpec, Data.EvaluatedData.Magnitude);
+					}
 				}
 			}
 		}
