@@ -49,7 +49,8 @@ void UGGGameplayEffectDamageCalc::Execute_Implementation(const FGameplayEffectCu
 	EvaluationParameters.TargetTags = TargetTags;
 
 	// Retrieve the InDamage value passed to Assign Tag Set By Caller Magnitude (On output of Make Outgoing Spec)
-	float InDamage = FMath::Max(Spec.GetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(FName("Damage.SetByCaller")), false, -1.f), 0.f);
+	float InDamage = 0.f;
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().InDamageDef, EvaluationParameters, InDamage);
 
 	FGameplayEffectSpec* MutableSpec = ExecutionParams.GetOwningSpecForPreExecuteMod();
 	float CritChance = 0.f;
@@ -94,5 +95,6 @@ void UGGGameplayEffectDamageCalc::Execute_Implementation(const FGameplayEffectCu
 	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().InDamageProperty, EGameplayModOp::Additive, InDamage));
 
 	UE_LOG(LogTemp, Log, TEXT("Damage - %f"), InDamage);
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Damage - %f"), InDamage));
 
 }

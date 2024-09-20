@@ -59,6 +59,14 @@ public:
 	FGameplayAttributeData LuckyChance;
 	ATTRIBUTE_ACCESSORS(UGGAttributeSet, LuckyChance);
 
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_DamageAdd, Category = "Attributes", meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData DamageAdd;
+	ATTRIBUTE_ACCESSORS(UGGAttributeSet, DamageAdd);
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_DamageMulti, Category = "Attributes", meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData DamageMulti;
+	ATTRIBUTE_ACCESSORS(UGGAttributeSet, DamageMulti);
+
 	mutable FGGAttributeEvent OnOutOfHealth;
 	mutable FGGAttributeEvent OnOutOfArmor;
 
@@ -84,6 +92,12 @@ protected:
 
 	UFUNCTION()
 	void OnRep_LuckyChance(const FGameplayAttributeData& OldLuckyChance);
+
+	UFUNCTION()
+	void OnRep_DamageAdd(const FGameplayAttributeData& OldDamageAdd);
+
+	UFUNCTION()
+	void OnRep_DamageMulti(const FGameplayAttributeData& OldDamageMulti);
 
 	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
