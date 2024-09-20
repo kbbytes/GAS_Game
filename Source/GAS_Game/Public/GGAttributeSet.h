@@ -47,6 +47,18 @@ public:
 	FGameplayAttributeData InDamage;
 	ATTRIBUTE_ACCESSORS(UGGAttributeSet, InDamage);
 
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_CritChance, Category = "Attributes", meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData CritChance;
+	ATTRIBUTE_ACCESSORS(UGGAttributeSet, CritChance);
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_CritMulti, Category = "Attributes", meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData CritMulti;
+	ATTRIBUTE_ACCESSORS(UGGAttributeSet, CritMulti);
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_LuckyChance, Category = "Attributes", meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData LuckyChance;
+	ATTRIBUTE_ACCESSORS(UGGAttributeSet, LuckyChance);
+
 	mutable FGGAttributeEvent OnOutOfHealth;
 	mutable FGGAttributeEvent OnOutOfArmor;
 
@@ -63,6 +75,15 @@ protected:
 
 	UFUNCTION()
 	void OnRep_MaxArmor(const FGameplayAttributeData& OldMaxArmor);
+
+	UFUNCTION()
+	void OnRep_CritChance(const FGameplayAttributeData& OldCritChance);
+
+	UFUNCTION()
+	void OnRep_CritMulti(const FGameplayAttributeData& OldCritMulti);
+
+	UFUNCTION()
+	void OnRep_LuckyChance(const FGameplayAttributeData& OldLuckyChance);
 
 	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;

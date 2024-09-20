@@ -6,7 +6,7 @@
 #include "GameplayEffectExtension.h"
 
 UGGAttributeSet::UGGAttributeSet()
-	: Health(40.f), MaxHealth(60.f), Armor(50.f), MaxArmor(50.f)
+	: Health(40.f), MaxHealth(60.f), Armor(50.f), MaxArmor(50.f), CritChance(0.f), CritMulti(1.5f), LuckyChance(5.f)
 {
 
 }
@@ -94,6 +94,10 @@ void UGGAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
 	DOREPLIFETIME_CONDITION_NOTIFY(UGGAttributeSet, Armor, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UGGAttributeSet, MaxArmor, COND_None, REPNOTIFY_Always);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(UGGAttributeSet, CritChance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UGGAttributeSet, CritMulti, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UGGAttributeSet, LuckyChance, COND_None, REPNOTIFY_Always);
 }
 
 void UGGAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
@@ -114,4 +118,19 @@ void UGGAttributeSet::OnRep_Armor(const FGameplayAttributeData& OldArmor)
 void UGGAttributeSet::OnRep_MaxArmor(const FGameplayAttributeData& OldMaxArmor)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UGGAttributeSet, MaxArmor, OldMaxArmor);
+}
+
+void UGGAttributeSet::OnRep_CritChance(const FGameplayAttributeData& OldCritChance)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGGAttributeSet, CritChance, OldCritChance);
+}
+
+void UGGAttributeSet::OnRep_CritMulti(const FGameplayAttributeData& OldCritMulti)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGGAttributeSet, CritMulti, OldCritMulti);
+}
+
+void UGGAttributeSet::OnRep_LuckyChance(const FGameplayAttributeData& OldLuckyChance)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGGAttributeSet, LuckyChance, OldLuckyChance);
 }
